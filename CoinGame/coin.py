@@ -35,7 +35,7 @@ fps = 60
 rankings_file = os.path.join(current_path, "rankings.json")
 
 def get_font(i, size):
-    fonts = [0, "font.ttf"]
+    fonts = [0, "font.ttf", "DNFBitBitv2.ttf"]
     return pygame.font.Font(os.path.join(font_path, fonts[i]), size)
 
 def play_mp4_cv():
@@ -192,56 +192,87 @@ def show_holdings(owned_stocks, stocks):
         close_button.update(SCREEN)
         pygame.display.update()
 
-def game(nickname):  
+def game(nickname):
     running = True
     balance = 10000
 
-    stock_names = [["MK", "Samsun"], ["Dogi", "Bicz"], ["Gold", "Dia"]]
+    #주식
+    stock_names = [["MK하이닉스", "삼선정자"], ["도기코인", "비츠코인"], ["반짝이는 금", "에메랄드"]]
     stock_types = ["주식", "코인", "광물"]
     stocks = [Stock(random.choice(stock_names[i]), stock_types[i], deque(), random.randint(30, 50), random.randint(100, 200), 0) for i in range(3)]
     stock_to_show = 0
     owned_stocks = [0, 0, 0]
 
-    STOCK_TIMER = pygame.USEREVENT + 1
-    pygame.time.set_timer(STOCK_TIMER, 500)  
+    STOCK_TIMER = pygame.USEREVENT + 1  #주식 업데이트 타이머
+    pygame.time.set_timer(STOCK_TIMER, 500) #주기 (단위:ms)
 
-    button_top_margin = 30
+    #주식 전환 버튼
+    button_top_margin = 0
     button_interval = 50
-    button_length = ((Stock.end_pos_x - Stock.start_pos_x) - button_interval * 2) / 2
-    button_pos_y = Stock.end_pos_y + button_top_margin + button_length * 0.75 - 100
-    button1_pos = (Stock.start_pos_x + button_length / 2 - 70, button_pos_y)
-    button2_pos = (Stock.start_pos_x + button_length * 1.5 - 70 + button_interval, button_pos_y)
-    button3_pos = (Stock.start_pos_x + button_length * 2.5 + button_interval * 2 - 70, button_pos_y)
-    stock_buttons = [Button(None, button1_pos, stocks[0].name, get_font(1, 50), '#585391', "White"),
-                     Button(None, button2_pos, stocks[1].name, get_font(1, 50), '#585391', "White"),
-                     Button(None, button3_pos, stocks[2].name, get_font(1, 50), '#585391', "White")]
+    button_length = ((Stock.end_pos_x - Stock.start_pos_x) - button_interval*2) / 3
+    button_pos_y = Stock.end_pos_y + button_top_margin + button_length*0.75
+    button1_pos = (Stock.start_pos_x + button_length/2, button_pos_y)
+    button2_pos = (Stock.start_pos_x + button_length*1.5 + button_interval, button_pos_y)
+    button3_pos = (Stock.start_pos_x + button_length*2.5 + button_interval*2, button_pos_y)
+
+    button_poses = [button1_pos, button2_pos, button3_pos]
+    stock_buttons = [Button(None, button_poses[i], f"{stocks[i].name}", get_font(2, 30), '#585391', "White") for i in range(3)]
 
     buy_button = Button(None, (1100, 500), "Buy", get_font(1, 50), '#28a745', "White")
     sell_button = Button(None, (1100, 600), "Sell", get_font(1, 50), '#dc3545', "White")
     holdings_button = Button(None, (300, 650), "Holdings", get_font(1, 50), '#585391', "White")
 
     time = 20
+
+    #속보
+    news_rect_height = 70
+    news_rect_width = 1000
+    news_rect_d_from_left_edge = 50
+    news_rect_pos_x = news_rect_d_from_left_edge
+    news_rect_pos_y = 600
+    NEWS_RECT = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "news_rect.png")), (news_rect_width, news_rect_height))
+    news_breaking_pos_x_center = 90
+    NEWS_BREAKING_TEXT = get_font(2, 30).render("속보", True, '#000000')
+    NEWS_BREAKING_RECT = NEWS_BREAKING_TEXT.get_rect(center=(news_breaking_pos_x_center, news_rect_pos_y+news_rect_height/2))
+    megaphone_height = news_rect_height*0.8
+    megaphone_pos_x = NEWS_BREAKING_RECT.width/2 + news_breaking_pos_x_center + 10
+    MEGAPHONE = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "megaphone.png")), (megaphone_height*4.7/3.7, megaphone_height))
+
+    newss = ["전세계 물류의 약 45%가 지나가는 수에즈 운하가 산사태에 의해 봉쇄되었습니다. 전문가들은 이 현상이 세계 반도체 시장에 미칠 영향을 우려하고 있습니다.",
+             "수에즈 운하 봉쇄에 의해 변경된 경로 반경 10km 내에 해적이 살고 있다는 소문이 있습니다. 이 루머의 진위는 아직 밝혀지지 않았지만 선박들은 최첨단 레이저 무기를 갖추고 있어 해적들 쯤은 거뜬히 처리해낼 수 있을 것으로 보입니다.",
+             "전세계 희귀 광물 공급량의 약 70%를 담당하고 있는 조선 광산에서 대규모 반제국주의 파업 행위가 일어났습니다. 일제는 진압을 위해 무력을 동원했지만 시위가 끝날 기미는 보이지 않습니다.",
+             "뿌에엙!                                                                                                    방송 사고로 인해 의도하지 않은 소음이 송출된 점 사과드립니다.",
+             "캄보디아 연구원들이 소량의 금속 샘플을 적은 비용으로 증식시키는 방법을 찾아냈습니다. 네이처(온라인학술자료플랫폼) 회원들은 해당 논문을 검증하는 중이라고 합니다."]
+    news_text_rect = pygame.Rect(megaphone_pos_x+megaphone_height*4.7/3.7 + 10, news_rect_pos_y, news_rect_width-170, NEWS_RECT.get_rect().bottom) #3번째 매개변수에 -170은 수식 생각하기 귀찮아서 한거임 알아서 조절하셈!!
+    news_speed = 3
+    NEWS_TEXT = get_font(2, 25).render(newss[1], True, '#000000')
+    news_pos = [1100, news_rect_pos_y+15]
+
+    #제한시간 타이머
+    time = 30 #제한시간 (단위:s)
+    time_text: str
     timer_pos_x = 1060
     timer_pos_y = 70
     timer_length = 185
     timer_height = 50
 
-    # Define the blinking effect variables
+    # 깜빡거리는 효과
     blinking = False
     blink_time = 0
 
     while running:
         clock.tick(fps)
         mouse_pos = pygame.mouse.get_pos()
+        news_pos[0] -= news_speed
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
                 sys.exit()
 
-            elif event.type == STOCK_TIMER:  
+            elif event.type == STOCK_TIMER: #그래프 수치 생성, 저장
                 for stock in stocks:
                     stock.stock()
-
+            
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for i, btn in enumerate(stock_buttons):
                     if btn.checkForInput(mouse_pos):
@@ -282,33 +313,44 @@ def game(nickname):
             show_rankings(nickname, round(balance+total_value))
             break
 
-        time_text = f"{(time // 60):02}:{(time % 60):02}"
+        time_text = f"{(time//60):02}:{(time%60):02}"
         TIME_TEXT = get_font(1, 35).render(time_text, True, "White")
-        TIME_RECT = TIME_TEXT.get_rect(center=(timer_pos_x + timer_length / 2, timer_pos_y + timer_height / 2))
-
+        TIME_RECT = TIME_TEXT.get_rect(center=(timer_pos_x+timer_length/2, timer_pos_y+timer_height/2))                
+        
+        #배경
         frame = play_mp4_cv()
         SCREEN.blit(pygame.transform.rotate(frame, -90), (0, 0))
-
+        
+        #주식 그래프
         stocks[stock_to_show].rect(pygame, SCREEN)
         stocks[stock_to_show].update(pygame, SCREEN)
 
+        #유저 정보
         user_info_text = get_font(1, 35).render(f"Nickname: {nickname} | Balance: ${balance}", True, "White")
         SCREEN.blit(user_info_text, (100, 30))
 
+        #버튼
         for b in stock_buttons + [buy_button, sell_button, holdings_button]:
             b.changeColor(mouse_pos)
             b.update(SCREEN)
-
         pygame.draw.rect(SCREEN, '#585391', (timer_pos_x, timer_pos_y, timer_length, timer_height))
 
+        #속보
+        SCREEN.blit(NEWS_RECT, (news_rect_pos_x, news_rect_pos_y))
+        SCREEN.blit(NEWS_BREAKING_TEXT, NEWS_BREAKING_RECT)
+        SCREEN.blit(MEGAPHONE, (megaphone_pos_x, news_rect_pos_y+7))
+        SCREEN.set_clip(news_text_rect)
+        SCREEN.blit(NEWS_TEXT, news_pos)
+        SCREEN.set_clip(None)
+
+        #타이머
         # Render the timer text only if not in the blinking state
         if not (time <= 5 and blinking):
             SCREEN.blit(TIME_TEXT, TIME_RECT)
 
         pygame.display.update()
 
-# 시작
 start()
+#game("e")
 
-# Pygame 종료
 pygame.quit()
