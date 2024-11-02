@@ -226,7 +226,7 @@ def game(nickname):
 
     #속보
     news_rect_height = 70
-    news_rect_width = 9000
+    news_rect_width = 1000
     news_rect_d_from_left_edge = 50
     news_rect_pos_x = news_rect_d_from_left_edge
     news_rect_pos_y = 550
