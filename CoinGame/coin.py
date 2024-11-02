@@ -55,7 +55,7 @@ def play_mp4_cv():
 def nickname_input():
     nickname = ''
     input_active = True
-    font = get_font(1, 50)
+    font = get_font(2, 50)
 
     while input_active:
         for event in pygame.event.get():
@@ -71,7 +71,7 @@ def nickname_input():
                     nickname += event.unicode
         
         SCREEN.blit(background, (0, 0))
-        nickname_text = font.render("Enter your nickname:", True, "White")
+        nickname_text = font.render("이름을 입력하세요:", True, "White")
         SCREEN.blit(nickname_text, (screen_width // 2 - nickname_text.get_width() // 2, screen_height // 2 - 50))
 
         entered_nickname_text = font.render(nickname, True, "White")
@@ -89,7 +89,7 @@ def start():  # 시작 메뉴
 
     TITLE_TEXT = get_font(1, 100).render("COIN GAME", True, "#585391")
     TITLE_RECT = TITLE_TEXT.get_rect(center=(640, 150))
-    PLAY_BUTTON = Button(None, (640, 360), "PLAY", get_font(1, 75), '#585391', "White")
+    PLAY_BUTTON = Button(None, (640, 330), "시작", get_font(2, 75), '#585391', "White")
 
     while running:
         clock.tick(fps)
@@ -141,12 +141,12 @@ def show_rankings(nickname, balance):
     title_rect = title_text.get_rect(center=(screen_width // 2, 80))
     SCREEN.blit(title_text, title_rect)
 
-    home_button = Button(None, (640, 600), "처음으로", get_font(1, 50), '#585391', "White")
+    home_button = Button(None, (640, 600), "처음으로", get_font(2, 50), '#585391', "White")
 
     for i, record in enumerate(rankings):
         rank_text = f"{i + 1}. {record['nickname']}: ${record['balance']}"
         rank_display = get_font(1, 35).render(rank_text, True, "White")
-        SCREEN.blit(rank_display, (screen_width // 2 - 200, 150 + i * 40))
+        SCREEN.blit(rank_display, (screen_width // 2 - 250, 150 + i * 40))
 
     pygame.display.update()
     
@@ -165,18 +165,18 @@ def show_rankings(nickname, balance):
 
 def show_holdings(owned_stocks, stocks):
     SCREEN.fill((0, 0, 0))
-    holdings_title = get_font(1, 50).render("Current Holdings", True, "White")
+    holdings_title = get_font(2, 50).render("보유 주식 현황", True, "White")
     SCREEN.blit(holdings_title, (screen_width // 2 - holdings_title.get_width() // 2, 50))
 
     for i, stock in enumerate(stocks):
         stock_name = stock.name
         quantity = owned_stocks[i]
         total_value = quantity * stock.current_price
-        holdings_text = f"{stock_name}: {quantity} units, Total Value: ${total_value}"
-        holdings_display = get_font(1, 35).render(holdings_text, True, "White")
+        holdings_text = f"{stock_name}: {quantity} 주, 총 가치: ${total_value}"
+        holdings_display = get_font(2, 35).render(holdings_text, True, "White")
         SCREEN.blit(holdings_display, (screen_width // 2 - holdings_display.get_width() // 2, 150 + i * 40))
 
-    close_button = Button(None, (screen_width // 2, 600), "Close", get_font(1, 50), '#585391', "White")
+    close_button = Button(None, (screen_width // 2, 600), "닫기", get_font(2, 50), '#585391', "White")
     pygame.display.update()
 
     showing_holdings = True
@@ -218,18 +218,18 @@ def game(nickname):
     button_poses = [button1_pos, button2_pos, button3_pos]
     stock_buttons = [Button(None, button_poses[i], f"{stocks[i].name}", get_font(2, 30), '#585391', "White") for i in range(3)]
 
-    buy_button = Button(None, (1100, 500), "Buy", get_font(1, 50), '#28a745', "White")
-    sell_button = Button(None, (1100, 600), "Sell", get_font(1, 50), '#dc3545', "White")
-    holdings_button = Button(None, (300, 650), "Holdings", get_font(1, 50), '#585391', "White")
+    buy_button = Button(None, (1100, 500), "구매", get_font(2, 50), '#28a745', "White")
+    sell_button = Button(None, (1100, 600), "판매", get_font(2, 50), '#dc3545', "White")
+    holdings_button = Button(None, (200, 650), "보유 주식", get_font(2, 50), '#585391', "White")
 
     time = 20
 
     #속보
     news_rect_height = 70
-    news_rect_width = 1000
+    news_rect_width = 9000
     news_rect_d_from_left_edge = 50
     news_rect_pos_x = news_rect_d_from_left_edge
-    news_rect_pos_y = 600
+    news_rect_pos_y = 550
     NEWS_RECT = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "news_rect.png")), (news_rect_width, news_rect_height))
     news_breaking_pos_x_center = 90
     NEWS_BREAKING_TEXT = get_font(2, 30).render("속보", True, '#000000')
@@ -252,7 +252,7 @@ def game(nickname):
     time = 30 #제한시간 (단위:s)
     time_text: str
     timer_pos_x = 1060
-    timer_pos_y = 70
+    timer_pos_y = 30
     timer_length = 185
     timer_height = 50
 
@@ -326,8 +326,8 @@ def game(nickname):
         stocks[stock_to_show].update(pygame, SCREEN)
 
         #유저 정보
-        user_info_text = get_font(1, 35).render(f"Nickname: {nickname} | Balance: ${balance}", True, "White")
-        SCREEN.blit(user_info_text, (100, 30))
+        user_info_text = get_font(2, 35).render(f"이름: {nickname}     |     자산: ${balance}", True, "Black")
+        SCREEN.blit(user_info_text, (50, 20))
 
         #버튼
         for b in stock_buttons + [buy_button, sell_button, holdings_button]:
