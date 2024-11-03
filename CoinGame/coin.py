@@ -370,7 +370,7 @@ def game(nickname):
 
         pygame.display.update()
 
-#start()
-game("e")
+start()
+#game("e")
 
 pygame.quit()
