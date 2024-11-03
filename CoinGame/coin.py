@@ -199,9 +199,10 @@ def game(nickname):
     #주식
     stock_names = [["MK하이닉스", "삼선정자"], ["도기코인", "비츠코인"], ["반짝이는 금", "에메랄드"]]
     stock_types = ["주식", "코인", "광물"]
-    stocks = [Stock(random.choice(stock_names[i]), stock_types[i], deque(), random.randint(30, 50), random.randint(100, 200), 0) for i in range(3)]
+    stocks = [Stock(random.choice(stock_names[i]), stock_types[i], deque(), random.randint(30, 50), random.randint(100, 200)/50, 0) for i in range(3)]
     stock_to_show = 0
     owned_stocks = [0, 0, 0]
+    investments = ([[], 0], [[], 0], [[], 0])  #[([매수한 주식 가격 기록], 합)]
 
     STOCK_TIMER = pygame.USEREVENT + 1  #주식 업데이트 타이머
     pygame.time.set_timer(STOCK_TIMER, 500) #주기 (단위:ms)
@@ -218,9 +219,10 @@ def game(nickname):
     button_poses = [button1_pos, button2_pos, button3_pos]
     stock_buttons = [Button(None, button_poses[i], f"{stocks[i].name}", get_font(2, 30), '#585391', "White") for i in range(3)]
 
+    #주식 관련 버튼
     buy_button = Button(None, (1100, 500), "구매", get_font(2, 50), '#28a745', "White")
     sell_button = Button(None, (1100, 600), "판매", get_font(2, 50), '#dc3545', "White")
-    holdings_button = Button(None, (200, 650), "보유 주식", get_font(2, 50), '#585391', "White")
+    holdings_button = Button(None, (1000, 300), "보유 주식", get_font(2, 50), '#585391', "White")
 
     time = 20
 
@@ -229,7 +231,7 @@ def game(nickname):
     news_rect_width = 1000
     news_rect_d_from_left_edge = 50
     news_rect_pos_x = news_rect_d_from_left_edge
-    news_rect_pos_y = 550
+    news_rect_pos_y = 620
     NEWS_RECT = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "news_rect.png")), (news_rect_width, news_rect_height))
     news_breaking_pos_x_center = 90
     NEWS_BREAKING_TEXT = get_font(2, 30).render("속보", True, '#000000')
@@ -279,15 +281,19 @@ def game(nickname):
                         stock_to_show = i
 
                 if buy_button.checkForInput(mouse_pos):
-                    current_price = stocks[stock_to_show].current_price / 50
+                    current_price = stocks[stock_to_show].current_price
                     if balance >= current_price:
                         balance -= current_price
                         owned_stocks[stock_to_show] += 1
+                        investments[stock_to_show][0].append(current_price)
+                        investments[stock_to_show][1] = round(investments[stock_to_show][1] + current_price, 2) #부동소수점 오차 오류 해결
 
                 if sell_button.checkForInput(mouse_pos):
                     if owned_stocks[stock_to_show] > 0:
-                        balance += stocks[stock_to_show].current_price / 50
+                        balance += stocks[stock_to_show].current_price
                         owned_stocks[stock_to_show] -= 1
+                        investments[stock_to_show][1] = round(investments[stock_to_show][1] - investments[stock_to_show][0][-1], 2) #부동소수점 오차 오류 해결
+                        investments[stock_to_show][0].pop()
 
                 if holdings_button.checkForInput(mouse_pos):
                     show_holdings(owned_stocks, stocks)
@@ -315,7 +321,8 @@ def game(nickname):
 
         time_text = f"{(time//60):02}:{(time%60):02}"
         TIME_TEXT = get_font(1, 35).render(time_text, True, "White")
-        TIME_RECT = TIME_TEXT.get_rect(center=(timer_pos_x+timer_length/2, timer_pos_y+timer_height/2))                
+        TIME_TEXT_BLINK = get_font(1, 35).render(time_text, True, "Red")
+        TIME_RECT = TIME_TEXT.get_rect(center=(timer_pos_x+timer_length/2, timer_pos_y+timer_height/2))        
         
         #배경
         frame = play_mp4_cv()
@@ -326,14 +333,25 @@ def game(nickname):
         stocks[stock_to_show].update(pygame, SCREEN)
 
         #유저 정보
-        user_info_text = get_font(2, 35).render(f"이름: {nickname}     |     자산: ${balance}", True, "Black")
-        SCREEN.blit(user_info_text, (50, 20))
+        user_info_text = get_font(2, 35).render(f"이름: {nickname}     |     자산: ${round(balance)}", True, "Black")
+        SCREEN.blit(user_info_text, (50, 10))
 
         #버튼
         for b in stock_buttons + [buy_button, sell_button, holdings_button]:
             b.changeColor(mouse_pos)
             b.update(SCREEN)
         pygame.draw.rect(SCREEN, '#585391', (timer_pos_x, timer_pos_y, timer_length, timer_height))
+
+        #xx%
+        for i, stock in enumerate(stocks):
+            if investments[i][1] != 0:
+                relative_price = (stock.current_price*owned_stocks[i] - investments[i][1]) / investments[i][1] * 100
+                relative_price_text = f"{round(relative_price, 2)}%"
+            else:
+                relative_price_text = "-"
+            RELATIVE_PRICE_TEXT = get_font(2, 25).render(relative_price_text, True, '#000000')
+            RELATIVE_PRICE_RECT = RELATIVE_PRICE_TEXT.get_rect(center=(button_poses[i][0], button_poses[i][1]+30))  
+            SCREEN.blit(RELATIVE_PRICE_TEXT, RELATIVE_PRICE_RECT)
 
         #속보
         SCREEN.blit(NEWS_RECT, (news_rect_pos_x, news_rect_pos_y))
@@ -345,12 +363,14 @@ def game(nickname):
 
         #타이머
         # Render the timer text only if not in the blinking state
-        if not (time <= 5 and blinking):
+        if not time <= 5 or blinking:
             SCREEN.blit(TIME_TEXT, TIME_RECT)
+        elif not blinking:
+            SCREEN.blit(TIME_TEXT_BLINK, TIME_RECT)
 
         pygame.display.update()
 
-start()
-#game("e")
+#start()
+game("e")
 
 pygame.quit()
