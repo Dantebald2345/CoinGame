@@ -11,6 +11,7 @@ class Stock():
     mid = (start_pos_y + end_pos_y)/2
     line_width = 5
     line_interval = line_width + 1
+    minimum_price = 100
 
     def __init__(self, name, type, deq: deque, change_coeff, price_multiplier, pointer):
         self.name = name
@@ -29,7 +30,7 @@ class Stock():
         else:
             self.deq.append((self.stock_pointer, price_diff, (255,0,0)))
         self.stock_pointer += price_diff
-        self.current_price = (self.end_pos_y - self.stock_pointer) * self.price_multiplier
+        self.current_price = (self.end_pos_y - self.stock_pointer + self.minimum_price) * self.price_multiplier
         if self.start_pos_x + self.pointer*self.line_interval > self.end_pos_x:
             self.deq.popleft()
         else:
