@@ -4,6 +4,7 @@ import pygame
 import cv2
 import random
 import json
+from decimal import Decimal
 from pygame.constants import QUIT
 from collections import deque
 from stock import Stock
@@ -172,7 +173,7 @@ def show_holdings(owned_stocks, stocks):
         stock_name = stock.name
         quantity = owned_stocks[i]
         total_value = quantity * stock.current_price
-        holdings_text = f"{stock_name}: {quantity} 주, 총 가치: ${total_value}"
+        holdings_text = f"{stock_name}: {quantity} 주, 총 가치: ${round(total_value, 2)}"
         holdings_display = get_font(2, 35).render(holdings_text, True, "White")
         SCREEN.blit(holdings_display, (screen_width // 2 - holdings_display.get_width() // 2, 150 + i * 40))
 
@@ -240,15 +241,19 @@ def game(nickname):
     megaphone_pos_x = NEWS_BREAKING_RECT.width/2 + news_breaking_pos_x_center + 10
     MEGAPHONE = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "megaphone.png")), (megaphone_height*4.7/3.7, megaphone_height))
 
-    newss = ["전세계 물류의 약 45%가 지나가는 수에즈 운하가 산사태에 의해 봉쇄되었습니다. 전문가들은 이 현상이 세계 반도체 시장에 미칠 영향을 우려하고 있습니다.",
-             "수에즈 운하 봉쇄에 의해 변경된 경로 반경 10km 내에 해적이 살고 있다는 소문이 있습니다. 이 루머의 진위는 아직 밝혀지지 않았지만 선박들은 최첨단 레이저 무기를 갖추고 있어 해적들 쯤은 거뜬히 처리해낼 수 있을 것으로 보입니다.",
-             "전세계 희귀 광물 공급량의 약 70%를 담당하고 있는 조선 광산에서 대규모 반제국주의 파업 행위가 일어났습니다. 일제는 진압을 위해 무력을 동원했지만 시위가 끝날 기미는 보이지 않습니다.",
-             "뿌에엙!                                                                                                    방송 사고로 인해 의도하지 않은 소음이 송출된 점 사과드립니다.",
-             "캄보디아 연구원들이 소량의 금속 샘플을 적은 비용으로 증식시키는 방법을 찾아냈습니다. 네이처(온라인학술자료플랫폼) 회원들은 해당 논문을 검증하는 중이라고 합니다."]
+    newss = [[(), 
+              ("전세계 물류의 약 45%가 지나가는 수에즈 운하가 산사태에 의해 봉쇄되었습니다. 전문가들은 이 현상이 세계 반도체 시장에 미칠 영향을 우려하고 있습니다.")],
+             ["수에즈 운하 봉쇄에 의해 변경된 경로 반경 10km 내에 해적이 살고 있다는 소문이 있습니다. 이 루머의 진위는 아직 밝혀지지 않았지만 선박들은 최첨단 레이저 무기를 갖추고 있어 해적들 쯤은 거뜬히 처리해낼 수 있을 것으로 보입니다.",
+             "뿌에엙!                                                                                                    방송 사고로 인해 의도하지 않은 소음이 송출된 점 사과드립니다."],
+             [("캄보디아 연구원들이 소량의 금속 샘플을 적은 비용으로 증식시키는 방법을 찾아냈습니다. 네이처(온라인학술자료플랫폼) 회원들은 해당 논문을 검증하는 중이라고 합니다."),
+              ("전세계 희귀 광물 공급량의 약 70%를 담당하고 있는 조선 광산에서 대규모 반제국주의 파업 행위가 일어났습니다. 일제는 진압을 위해 무력을 동원했지만 시위가 끝날 기미는 보이지 않습니다.")]]
+    # newss[a][b] a: 뉴스 유형, b: up/down
     news_text_rect = pygame.Rect(megaphone_pos_x+megaphone_height*4.7/3.7 + 10, news_rect_pos_y, news_rect_width-170, NEWS_RECT.get_rect().bottom) #3번째 매개변수에 -170은 수식 생각하기 귀찮아서 한거임 알아서 조절하셈!!
-    news_speed = 3
-    NEWS_TEXT = get_font(2, 25).render(newss[1], True, '#000000')
-    news_pos = [1100, news_rect_pos_y+15]
+    news_speed = 10
+    NEWS_TEXT = get_font(1, 1).render("", True, "#000000")
+    news_pos_x = 1000
+    news_pos = [news_pos_x, news_rect_pos_y+15]
+    news_running = False
 
     #제한시간 타이머
     time = 30 #제한시간 (단위:s)
@@ -309,6 +314,19 @@ def game(nickname):
                     blink_time += 1  # Increment blink timer
                     if blink_time >= 5:  # Blink every 5 frames
                         blink_time = 0  # Reset blink timer
+                
+                if not news_running and random.randint(1, 100) <= 20:  #20% 확률
+                    news_running = True
+                    news_pos = [news_pos_x, news_rect_pos_y+15]
+                    news_type = random.randint(0, 2) # 0: 주식, 1: 아무것도 아님, 2: 광물
+                    if news_type != 1:
+                        updown = random.randint(0, 1) # 0: up, 2: down
+                        NEWS_TEXT = get_font(2, 25).render(random.choice(newss[news_type][updown]), True, '#000000')
+                        # 주식 가격 변동 추가 필요
+                    else:
+                        NEWS_TEXT = get_font(2, 25).render(random.choice(newss[news_type]), True, '#000000')
+                if not NEWS_TEXT.get_rect(topleft=(news_pos)).colliderect(news_text_rect):
+                    news_running = False
 
         if time <= 0:
             quantity=0
