@@ -23,8 +23,8 @@ class Stock():
         self.pointer = pointer
         self.current_price = self.mid
 
-    def stock(self):
-        price_diff = change_price(self.change_coeff, self.stock_pointer, self.start_pos_y, self.end_pos_y, "any")
+    def stock(self, updown):
+        price_diff = change_price(self.change_coeff, self.stock_pointer, self.start_pos_y, self.end_pos_y, updown)
         if price_diff >= 0:
             self.deq.append((self.stock_pointer, price_diff, (0,0,255))) #blue
         else:
@@ -43,16 +43,19 @@ class Stock():
 
     def rect(self, pygame, screen):
         pygame.draw.rect(screen, (255,255,255), (self.start_pos_x-self.border_x, self.start_pos_y-self.border_y, 
-            self.end_pos_x-self.start_pos_x+self.border_x*2, self.end_pos_y-self.start_pos_y+self.border_y*2))        
+            self.end_pos_x-self.start_pos_x+self.border_x*2, self.end_pos_y-self.start_pos_y+self.border_y*2))
+        pygame.draw.line(screen, "#000000", (self.start_pos_x-self.line_width/2, self.start_pos_y), (self.start_pos_x-self.line_width/2, self.end_pos_y), 2)
+        pygame.draw.line(screen, "#000000", (self.start_pos_x-self.line_width/2, self.end_pos_y), (self.end_pos_x, self.end_pos_y), 2)
 
-def change_price(coeff, current, min, max, updown:str):
+
+def change_price(coeff, current, min, max, updown:int):
     sum = 0
     change_base = 0
-    if updown == "up":
+    if updown == 1:
         while sum < min or sum > max:
             change_base = random.randrange(-coeff, 0)
             sum = current + change_base
-    elif updown == "down":
+    elif updown == 2:
         while sum < min or sum > max:
             change_base = random.randrange(0, coeff)
             sum = current + change_base
