@@ -204,6 +204,7 @@ def game(nickname):
     stock_to_show = 0
     owned_stocks = [0, 0, 0]
     investments = ([[], 0], [[], 0], [[], 0])  #[([매수한 주식 가격 기록], 합)]
+    updown = 0
 
     STOCK_TIMER = pygame.USEREVENT + 1  #주식 업데이트 타이머
     pygame.time.set_timer(STOCK_TIMER, 500) #주기 (단위:ms)
@@ -241,22 +242,22 @@ def game(nickname):
     megaphone_pos_x = NEWS_BREAKING_RECT.width/2 + news_breaking_pos_x_center + 10
     MEGAPHONE = pygame.transform.scale(pygame.image.load(os.path.join(image_path, "megaphone.png")), (megaphone_height*4.7/3.7, megaphone_height))
 
-    newss = [[(), 
-              ("전세계 물류의 약 45%가 지나가는 수에즈 운하가 산사태에 의해 봉쇄되었습니다. 전문가들은 이 현상이 세계 반도체 시장에 미칠 영향을 우려하고 있습니다.")],
-             ["수에즈 운하 봉쇄에 의해 변경된 경로 반경 10km 내에 해적이 살고 있다는 소문이 있습니다. 이 루머의 진위는 아직 밝혀지지 않았지만 선박들은 최첨단 레이저 무기를 갖추고 있어 해적들 쯤은 거뜬히 처리해낼 수 있을 것으로 보입니다.",
-             "뿌에엙!                                                                                                    방송 사고로 인해 의도하지 않은 소음이 송출된 점 사과드립니다."],
-             [("캄보디아 연구원들이 소량의 금속 샘플을 적은 비용으로 증식시키는 방법을 찾아냈습니다. 네이처(온라인학술자료플랫폼) 회원들은 해당 논문을 검증하는 중이라고 합니다."),
-              ("전세계 희귀 광물 공급량의 약 70%를 담당하고 있는 조선 광산에서 대규모 반제국주의 파업 행위가 일어났습니다. 일제는 진압을 위해 무력을 동원했지만 시위가 끝날 기미는 보이지 않습니다.")]]
+    newss = [  #[글, 주식 타입, 업/다운] 0: 주식, 1: 아무것도 아님, 2: 광물 / 1: up, 2: down
+        ["전세계 물류의 약 45%가 지나가는 수에즈 운하가 산사태에 의해 봉쇄되었습니다. 전문가들은 이 현상이 세계 반도체 시장에 미칠 영향을 우려하고 있습니다.", 0, 2],
+        ["수에즈 운하 봉쇄에 의해 변경된 경로 반경 10km 내에 해적이 살고 있다는 소문이 있습니다. 이 루머의 진위는 아직 밝혀지지 않았지만 선박들은 최첨단 레이저 무기를 갖추고 있어 해적들 쯤은 거뜬히 처리해낼 수 있을 것으로 보입니다.", 1],
+        ["뿌에엙!                                                                                                    방송 사고로 인해 의도하지 않은 소음이 송출된 점 사과드립니다.", 1],
+        ["캄보디아 연구원들이 소량의 금속 샘플을 적은 비용으로 증식시키는 방법을 찾아냈습니다. 네이처(온라인학술자료플랫폼) 회원들은 해당 논문을 검증하는 중이라고 합니다.", 2, 2],
+        ["전세계 희귀 광물 공급량의 약 70%를 담당하고 있는 조선 광산에서 대규모 반제국주의 파업 행위가 일어났습니다. 일제는 진압을 위해 무력을 동원했지만 시위가 끝날 기미는 보이지 않습니다.", 2, 2]]
     # newss[a][b] a: 뉴스 유형, b: up/down
     news_text_rect = pygame.Rect(megaphone_pos_x+megaphone_height*4.7/3.7 + 10, news_rect_pos_y, news_rect_width-170, NEWS_RECT.get_rect().bottom) #3번째 매개변수에 -170은 수식 생각하기 귀찮아서 한거임 알아서 조절하셈!!
-    news_speed = 10
+    news_speed = 7
     NEWS_TEXT = get_font(1, 1).render("", True, "#000000")
     news_pos_x = 1000
     news_pos = [news_pos_x, news_rect_pos_y+15]
     news_running = False
 
     #제한시간 타이머
-    time = 30 #제한시간 (단위:s)
+    time = 40 #제한시간 (단위:s)
     time_text: str
     timer_pos_x = 1060
     timer_pos_y = 30
@@ -278,7 +279,7 @@ def game(nickname):
 
             elif event.type == STOCK_TIMER: #그래프 수치 생성, 저장
                 for stock in stocks:
-                    stock.stock()
+                    stock.stock(updown)
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for i, btn in enumerate(stock_buttons):
@@ -318,13 +319,13 @@ def game(nickname):
                 if not news_running and random.randint(1, 100) <= 20:  #20% 확률
                     news_running = True
                     news_pos = [news_pos_x, news_rect_pos_y+15]
-                    news_type = random.randint(0, 2) # 0: 주식, 1: 아무것도 아님, 2: 광물
+                    news = random.choice(newss)
+                    news_txt, news_type= news[0], news[1]
                     if news_type != 1:
-                        updown = random.randint(0, 1) # 0: up, 2: down
-                        NEWS_TEXT = get_font(2, 25).render(random.choice(newss[news_type][updown]), True, '#000000')
-                        # 주식 가격 변동 추가 필요
+                        updown = news[2] # 0: up, 2: down
+                        NEWS_TEXT = get_font(2, 25).render(news_txt, True, '#000000')
                     else:
-                        NEWS_TEXT = get_font(2, 25).render(random.choice(newss[news_type]), True, '#000000')
+                        NEWS_TEXT = get_font(2, 25).render(news_txt, True, '#000000')
                 if not NEWS_TEXT.get_rect(topleft=(news_pos)).colliderect(news_text_rect):
                     news_running = False
 
@@ -381,7 +382,7 @@ def game(nickname):
 
         #타이머
         # Render the timer text only if not in the blinking state
-        if not time <= 5 or blinking:
+        if not time <= 10 or blinking:
             SCREEN.blit(TIME_TEXT, TIME_RECT)
         elif not blinking:
             SCREEN.blit(TIME_TEXT_BLINK, TIME_RECT)
