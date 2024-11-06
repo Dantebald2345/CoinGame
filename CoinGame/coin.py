@@ -4,7 +4,6 @@ import pygame
 import cv2
 import random
 import json
-from decimal import Decimal
 from pygame.constants import QUIT
 from collections import deque
 from stock import Stock
@@ -255,6 +254,9 @@ def game(nickname):
     news_pos_x = 1000
     news_pos = [news_pos_x, news_rect_pos_y+15]
     news_running = False
+    news_type = -1
+    news_time = 30
+    news: str
 
     #제한시간 타이머
     time = 40 #제한시간 (단위:s)
@@ -278,8 +280,11 @@ def game(nickname):
                 sys.exit()
 
             elif event.type == STOCK_TIMER: #그래프 수치 생성, 저장
-                for stock in stocks:
-                    stock.stock(updown)
+                for i, stock in enumerate(stocks):
+                    if i == news_type:
+                        stock.stock(updown)
+                    else:
+                        stock.stock()
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for i, btn in enumerate(stock_buttons):
@@ -306,6 +311,7 @@ def game(nickname):
 
             elif event.type == TIME_UPDATE:
                 time -= 1  
+                news_time += 1
                 if time <= 0:
                     running = False  
 
@@ -317,17 +323,24 @@ def game(nickname):
                         blink_time = 0  # Reset blink timer
                 
                 if not news_running and random.randint(1, 100) <= 20:  #20% 확률
+                    news_time = 0
                     news_running = True
                     news_pos = [news_pos_x, news_rect_pos_y+15]
                     news = random.choice(newss)
-                    news_txt, news_type= news[0], news[1]
+                    news_txt, news_type = news[0], news[1]
                     if news_type != 1:
-                        updown = news[2] # 0: up, 2: down
                         NEWS_TEXT = get_font(2, 25).render(news_txt, True, '#000000')
                     else:
                         NEWS_TEXT = get_font(2, 25).render(news_txt, True, '#000000')
                 if not NEWS_TEXT.get_rect(topleft=(news_pos)).colliderect(news_text_rect):
                     news_running = False
+
+                if news_time == 3:
+                    if news_type != 1:
+                        updown = news[2] # 0: up, 2: down
+
+                elif news_time == 7:
+                    news_type = -1
 
         if time <= 0:
             quantity=0
