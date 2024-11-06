@@ -1,3 +1,4 @@
+
 import random
 from collections import deque
 class Stock():
@@ -23,7 +24,7 @@ class Stock():
         self.pointer = pointer
         self.current_price = self.mid
 
-    def stock(self, updown):
+    def stock(self, updown=None):
         price_diff = change_price(self.change_coeff, self.stock_pointer, self.start_pos_y, self.end_pos_y, updown)
         if price_diff >= 0:
             self.deq.append((self.stock_pointer, price_diff, (0,0,255))) #blue
