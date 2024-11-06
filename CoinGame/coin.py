@@ -225,8 +225,6 @@ def game(nickname):
     sell_button = Button(None, (1100, 600), "판매", get_font(2, 50), '#dc3545', "White")
     holdings_button = Button(None, (1000, 300), "보유 주식", get_font(2, 50), '#585391', "White")
 
-    time = 20
-
     #속보
     news_rect_height = 70
     news_rect_width = 1000
@@ -259,7 +257,7 @@ def game(nickname):
     news: str
 
     #제한시간 타이머
-    time = 40 #제한시간 (단위:s)
+    time = 60 #제한시간 (단위:s)
     time_text: str
     timer_pos_x = 1060
     timer_pos_y = 30
