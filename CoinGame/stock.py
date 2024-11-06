@@ -54,11 +54,11 @@ def change_price(coeff, current, min, max, updown:int):
     change_base = 0
     if updown == 1:
         while sum < min or sum > max:
-            change_base = random.randrange(-coeff/2, 0)
+            change_base = random.randrange(-coeff+20, 0)
             sum = current + change_base
     elif updown == 2:
         while sum < min or sum > max:
-            change_base = random.randrange(0, coeff/2)
+            change_base = random.randrange(0, coeff-20)
             sum = current + change_base
     else:
         while sum < min or sum > max:
