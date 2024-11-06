@@ -379,9 +379,13 @@ def game(nickname):
             if investments[i][1] != 0:
                 relative_price = (stock.current_price*owned_stocks[i] - investments[i][1]) / investments[i][1] * 100
                 relative_price_text = f"{round(relative_price, 2)}%"
+                if relative_price > 0:
+                    RELATIVE_PRICE_TEXT = get_font(2, 25).render(relative_price_text, True, 'Red')
+                else:
+                    RELATIVE_PRICE_TEXT = get_font(2, 25).render(relative_price_text, True, 'Blue')
             else:
                 relative_price_text = "-"
-            RELATIVE_PRICE_TEXT = get_font(2, 25).render(relative_price_text, True, '#000000')
+                RELATIVE_PRICE_TEXT = get_font(2, 25).render(relative_price_text, True, '#000000')
             RELATIVE_PRICE_RECT = RELATIVE_PRICE_TEXT.get_rect(center=(button_poses[i][0], button_poses[i][1]+30))  
             SCREEN.blit(RELATIVE_PRICE_TEXT, RELATIVE_PRICE_RECT)
 
